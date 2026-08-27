@@ -4,7 +4,7 @@
  */
 
 import { PDFDocument } from 'pdf-lib';
-import { initI18n, t } from './i18n.js';
+import { initI18n, t, createLanguageSelector } from './i18n.js';
 
 // State
 let images = []; // [{ id, file, thumbnail, width, height }]
@@ -37,6 +37,7 @@ const srLive = document.getElementById('sr-live');
 // === Initialization ===
 async function init() {
   await initI18n();
+  createLanguageSelector(document.getElementById('lang-selector'));
   setupEventListeners();
   updateControlsVisibility();
 }

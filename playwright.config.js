@@ -3,34 +3,34 @@ import { defineConfig, devices } from '@playwright/test';
 export default defineConfig({
   testDir: './tests/e2e',
   outputDir: './tests/e2e/artifacts',
-  
+
   // Run tests in files in parallel
   fullyParallel: true,
-  
+
   // Fail the build on .only
   forbidOnly: !!process.env.CI,
-  
+
   // Retry on CI only
   retries: process.env.CI ? 2 : 0,
-  
-  // Workers: undefined = auto (optimal for local), 1 on CI
-  workers: process.env.CI ? 1 : undefined,
-  
+
+  // Workers: 2 for stable parallel execution
+  workers: 2,
+
   // Reporter configuration
   reporter: [
     ['html', { outputFolder: './tests/e2e/results/report', open: 'never' }],
     ['line'],
     ['list'],
   ],
-  
+
   timeout: 60 * 1000,
   expect: {
     timeout: 10000,
   },
-  
+
   // Shared settings for all tests
   use: {
-    baseURL: 'http://localhost:5173',
+    baseURL: 'http://localhost:5174',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
@@ -43,7 +43,7 @@ export default defineConfig({
     // Headless by default
     headless: true,
   },
-  
+
   // Test projects — chromium only (guaranteed installed)
   projects: [
     {
@@ -51,11 +51,11 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
     },
   ],
-  
-  // Start local dev server before tests
+
+  // Start local dev server before tests (port 5174 to avoid conflict with pdf-reorder on 5173)
   webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:5173',
+    command: 'npx vite --port 5174 --strictPort',
+    url: 'http://localhost:5174',
     reuseExistingServer: !process.env.CI,
     timeout: 30000,
   },
