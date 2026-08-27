@@ -19,7 +19,7 @@ export const TRANSLATIONS = {
   en: {
     'app.title': 'Images to PDF — Convert photos into a PDF',
     'app.tagline': 'Combine multiple images into a single PDF document',
-    'privacy.badge': '100% client-side',
+    'privacy.badge': '🔒 100% local — your files never leave your browser',
     'dropzone.title': 'Drop images here',
     'dropzone.subtitle': 'or click to browse',
     'dropzone.accept': 'PNG, JPEG, WebP, GIF supported',
@@ -71,7 +71,7 @@ export const TRANSLATIONS = {
   fr: {
     'app.title': 'Images vers PDF — Convertir des photos en PDF',
     'app.tagline': 'Regroupez plusieurs images en un seul document PDF',
-    'privacy.badge': '100% côté client',
+    'privacy.badge': '🔒 100% local — vos fichiers ne quittent jamais votre navigateur',
     'dropzone.title': 'Déposez vos images ici',
     'dropzone.subtitle': 'ou cliquez pour parcourir',
     'dropzone.accept': 'PNG, JPEG, WebP, GIF supportés',
@@ -123,7 +123,7 @@ export const TRANSLATIONS = {
   de: {
     'app.title': 'Bilder zu PDF — Fotos in PDF konvertieren',
     'app.tagline': 'Mehrere Bilder zu einem einzigen PDF-Dokument kombinieren',
-    'privacy.badge': '100% Client-seitig',
+    'privacy.badge': '🔒 100% lokal — Ihre Dateien verlassen nie den Browser',
     'dropzone.title': 'Bilder hier ablegen',
     'dropzone.subtitle': 'oder klicken zum Durchsuchen',
     'dropzone.accept': 'PNG, JPEG, WebP, GIF unterstützt',
@@ -175,7 +175,7 @@ export const TRANSLATIONS = {
   es: {
     'app.title': 'Imágenes a PDF — Convertir fotos en PDF',
     'app.tagline': 'Combine múltiples imágenes en un solo documento PDF',
-    'privacy.badge': '100% del lado del cliente',
+    'privacy.badge': '🔒 100% local — tus archivos nunca salen del navegador',
     'dropzone.title': 'Suelte las imágenes aquí',
     'dropzone.subtitle': 'o haga clic para buscar',
     'dropzone.accept': 'PNG, JPEG, WebP, GIF admitidos',
@@ -227,7 +227,7 @@ export const TRANSLATIONS = {
   pt: {
     'app.title': 'Imagens para PDF — Converter fotos em PDF',
     'app.tagline': 'Combine várias imagens em um único documento PDF',
-    'privacy.badge': '100% do lado do cliente',
+    'privacy.badge': '🔒 100% local — seus arquivos nunca saem do navegador',
     'dropzone.title': 'Solte as imagens aqui',
     'dropzone.subtitle': 'ou clique para procurar',
     'dropzone.accept': 'PNG, JPEG, WebP, GIF suportados',
@@ -279,7 +279,7 @@ export const TRANSLATIONS = {
   nl: {
     'app.title': "Afbeeldingen naar PDF — Foto's omzetten naar PDF",
     'app.tagline': 'Meerdere afbeeldingen combineren in één PDF-document',
-    'privacy.badge': '100% client-zijde',
+    'privacy.badge': '🔒 100% lokaal — uw bestanden verlaten nooit uw browser',
     'dropzone.title': 'Sleep afbeeldingen hierheen',
     'dropzone.subtitle': 'of klik om te bladeren',
     'dropzone.accept': 'PNG, JPEG, WebP, GIF ondersteund',
@@ -331,7 +331,7 @@ export const TRANSLATIONS = {
   it: {
     'app.title': 'Immagini in PDF — Convertire foto in PDF',
     'app.tagline': 'Combina più immagini in un singolo documento PDF',
-    'privacy.badge': '100% lato client',
+    'privacy.badge': '🔒 100% locale — i tuoi file non lasciano mai il browser',
     'dropzone.title': 'Rilascia le immagini qui',
     'dropzone.subtitle': 'o clicca per sfogliare',
     'dropzone.accept': 'PNG, JPEG, WebP, GIF supportati',
