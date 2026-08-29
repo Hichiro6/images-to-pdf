@@ -34,6 +34,12 @@ const btnConvert = document.getElementById('btn-convert');
 const btnDownload = document.getElementById('btn-download');
 const srLive = document.getElementById('sr-live');
 
+// Mobile Safari canvas size limit (16.7 MP)
+const MAX_CANVAS_PIXELS = 16 * 1024 * 1024;
+
+// Track object URLs for cleanup
+const createdUrls = new Set();
+
 // === Initialization ===
 async function init() {
   await initI18n();
@@ -48,6 +54,15 @@ function setupEventListeners() {
   dropzone.addEventListener('dragleave', handleDragLeave);
   dropzone.addEventListener('drop', handleDrop);
   dropzone.addEventListener('click', () => fileInput.click());
+  
+  // Keyboard navigation for dropzone
+  dropzone.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      fileInput.click();
+    }
+  });
+  
   fileInput.addEventListener('change', handleFileSelect);
 
   // Add more files
@@ -64,7 +79,26 @@ function setupEventListeners() {
     currentFormat = e.target.value;
   });
 
-  // Orientation
+  // Orientation - with keyboard support
+  const orientationGroup = document.querySelector('[aria-label="Orientation"]');
+  orientationGroup.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+      e.preventDefault();
+      const buttons = Array.from(orientationGroup.querySelectorAll('.seg-btn'));
+      const activeIdx = buttons.findIndex(btn => btn.classList.contains('active'));
+      let newIdx = e.key === 'ArrowLeft' ? (activeIdx - 1 + buttons.length) % buttons.length : (activeIdx + 1) % buttons.length;
+      
+      buttons.forEach((btn, i) => {
+        if (i === newIdx) {
+          btn.click();
+          btn.focus();
+        } else {
+          btn.blur();
+        }
+      });
+    }
+  });
+  
   document.querySelectorAll('.seg-btn[data-orientation]').forEach((btn) => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.seg-btn[data-orientation]').forEach((b) => {
@@ -85,7 +119,26 @@ function setupEventListeners() {
     marginValue.textContent = currentMargin;
   });
 
-  // Quality
+  // Quality - with keyboard support
+  const qualityGroup = document.querySelector('[aria-label="Image quality"]');
+  qualityGroup.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+      e.preventDefault();
+      const buttons = Array.from(qualityGroup.querySelectorAll('.seg-btn'));
+      const activeIdx = buttons.findIndex(btn => btn.classList.contains('active'));
+      let newIdx = e.key === 'ArrowLeft' ? (activeIdx - 1 + buttons.length) % buttons.length : (activeIdx + 1) % buttons.length;
+      
+      buttons.forEach((btn, i) => {
+        if (i === newIdx) {
+          btn.click();
+          btn.focus();
+        } else {
+          btn.blur();
+        }
+      });
+    }
+  });
+  
   document.querySelectorAll('.seg-btn[data-quality]').forEach((btn) => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.seg-btn[data-quality]').forEach((b) => {
@@ -156,37 +209,35 @@ async function handleFiles(files) {
 }
 
 // === Image Loading ===
-function loadImage(file) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = async () => {
-      try {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        const maxWidth = 280;
-        const scale = Math.min(1, maxWidth / img.width);
-        canvas.width = img.width * scale;
-        canvas.height = img.height * scale;
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+async function loadImage(file) {
+  // Load image with orientation awareness via createImageBitmap
+  const imgBitmap = await createImageBitmap(file);
+  const width = imgBitmap.width;
+  const height = imgBitmap.height;
 
-        const thumbnail = canvas.toDataURL('image/jpeg', 0.85);
+  // Calculate scale to fit within mobile Safari canvas limit (16.7 MP)
+  const maxDim = Math.sqrt(MAX_CANVAS_PIXELS);
+  const scale = Math.min(1, maxDim / Math.max(width, height));
+  const scaledWidth = Math.round(width * scale);
+  const scaledHeight = Math.round(height * scale);
 
-        resolve({
-          id: crypto.randomUUID(),
-          file,
-          thumbnail,
-          width: img.width,
-          height: img.height,
-        });
-      } catch (err) {
-        reject(err);
-      }
-    };
-    img.onerror = () => reject(new Error(`Failed to load ${file.name}`));
+  const canvas = document.createElement('canvas');
+  canvas.width = scaledWidth;
+  canvas.height = scaledHeight;
+  const ctx = canvas.getContext('2d');
 
-    const url = URL.createObjectURL(file);
-    img.src = url;
-  });
+  ctx.drawImage(imgBitmap, 0, 0, scaledWidth, scaledHeight);
+  imgBitmap.close();
+
+  const thumbnail = canvas.toDataURL('image/jpeg', 0.85);
+
+  return {
+    id: crypto.randomUUID(),
+    file,
+    thumbnail,
+    width: scaledWidth,
+    height: scaledHeight,
+  };
 }
 
 // === Rendering ===
@@ -361,6 +412,11 @@ function announce(message) {
 }
 
 function resetAll() {
+  // Cleanup any existing object URLs
+  createdUrls.forEach(url => URL.revokeObjectURL(url));
+  createdUrls.clear();
+  window.currentPdfBlob = null;
+  
   images = [];
   imagesGrid.innerHTML = '';
   workspace.hidden = true;
@@ -394,7 +450,7 @@ async function convertToPdf() {
 
     for (let i = 0; i < selectedImages.length; i++) {
       const image = selectedImages[i];
-      progressText.textContent = t('progress.processing', {
+      progressText.textContent = t('progress.image', {
         current: i + 1,
         total: selectedImages.length,
       });
@@ -419,13 +475,15 @@ async function convertToPdf() {
         const ctx = canvas.getContext('2d');
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        const img = new Image();
+        
+        const tempImg = new Image();
         await new Promise((r) => {
-          img.onload = r;
-          img.onerror = r;
-          img.src = image.thumbnail.replace(/data:[^;]+;base64,/, 'data:image/jpeg;base64,');
+          tempImg.onload = r;
+          tempImg.onerror = r;
+          tempImg.src = image.thumbnail;
         });
-        ctx.drawImage(img, 0, 0);
+        ctx.drawImage(tempImg, 0, 0);
+        
         const jpegDataUrl = await new Promise((resolve) => {
           canvas.toBlob(
             (blob) => {
@@ -474,8 +532,6 @@ async function convertToPdf() {
       const { width: imgW, height: imgH } = embeddedImage;
 
       // Center image on page
-      const _x = marginPts;
-      const _y = marginPts;
       const scaledW = currentFormat === 'fit' ? imgW : Math.min(imgW, pageWidth - marginPts * 2);
       const scaledH = currentFormat === 'fit' ? imgH : Math.min(imgH, pageHeight - marginPts * 2);
       const centerX = (pageWidth - scaledW) / 2;
@@ -492,7 +548,12 @@ async function convertToPdf() {
     progressText.textContent = t('progress.finalizing');
     const pdfBytes = await pdfDoc.save();
 
-    // Store PDF for download
+    // Store PDF for download - cleanup old blob first
+    if (window.currentPdfBlob) {
+      const oldUrl = window.currentPdfBlob._objectUrl;
+      if (oldUrl) URL.revokeObjectURL(oldUrl);
+    }
+    
     window.currentPdfBlob = new Blob([pdfBytes], { type: 'application/pdf' });
 
     progressFill.style.width = '100%';
@@ -500,11 +561,11 @@ async function convertToPdf() {
     resultInfo.hidden = false;
     btnConvert.hidden = true;
     btnDownload.hidden = false;
-    announce(t('progress.completed'));
+    announce(t('result.pdfCreated'));
   } catch (err) {
     console.error('PDF creation failed:', err);
-    progressText.textContent = t('error.failed');
-    resultInfo.querySelector('.result-label').textContent = t('error.pdfCreation');
+    progressText.textContent = t('alerts.error', { msg: err.message });
+    resultInfo.querySelector('.result-label').textContent = t('result.ready');
     resultInfo.style.background = 'rgba(232, 69, 69, 0.1)';
     resultInfo.style.borderColor = 'var(--danger)';
     resultInfo.hidden = false;
@@ -517,14 +578,24 @@ async function downloadPdf() {
   if (!window.currentPdfBlob) return;
 
   const url = URL.createObjectURL(window.currentPdfBlob);
+  // Store URL for cleanup
+  window.currentPdfBlob._objectUrl = url;
+  createdUrls.add(url);
+  
   const a = document.createElement('a');
   a.href = url;
   a.download = `images-${new Date().toISOString().slice(0, 10)}.pdf`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-  announce(t('btn.downloadStarted'));
+  
+  // Schedule cleanup
+  setTimeout(() => {
+    URL.revokeObjectURL(url);
+    createdUrls.delete(url);
+  }, 5000);
+  
+  announce(t('btn.download'));
 }
 
 // Start
