@@ -4,7 +4,7 @@
  */
 
 import { PDFDocument } from 'pdf-lib';
-import { initI18n, t, createLanguageSelector } from './i18n.js';
+import { createLanguageSelector, initI18n, t } from './i18n.js';
 
 // State
 let images = []; // [{ id, file, thumbnail, width, height }]
@@ -25,6 +25,11 @@ const formatSelect = document.getElementById('format-select');
 const marginRange = document.getElementById('margin-range');
 const marginValue = document.getElementById('margin-value');
 const _qualityGroup = document.querySelector('[data-quality="medium"]').closest('.control-group');
+// App state for controls
+let currentImagesMode = 'all';
+let pdfBlob = null;
+
+const COLLAPSIBLE_SELECTOR = '.control-group__title';
 const progressContainer = document.getElementById('progress-container');
 const progressFill = document.getElementById('progress-fill');
 const progressPercent = document.getElementById('progress-percent');
@@ -54,7 +59,7 @@ function setupEventListeners() {
   dropzone.addEventListener('dragleave', handleDragLeave);
   dropzone.addEventListener('drop', handleDrop);
   dropzone.addEventListener('click', () => fileInput.click());
-  
+
   // Keyboard navigation for dropzone
   dropzone.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' || e.key === ' ') {
@@ -62,7 +67,7 @@ function setupEventListeners() {
       fileInput.click();
     }
   });
-  
+
   fileInput.addEventListener('change', handleFileSelect);
 
   // Add more files
@@ -85,9 +90,12 @@ function setupEventListeners() {
     if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
       e.preventDefault();
       const buttons = Array.from(orientationGroup.querySelectorAll('.seg-btn'));
-      const activeIdx = buttons.findIndex(btn => btn.classList.contains('active'));
-      let newIdx = e.key === 'ArrowLeft' ? (activeIdx - 1 + buttons.length) % buttons.length : (activeIdx + 1) % buttons.length;
-      
+      const activeIdx = buttons.findIndex((btn) => btn.classList.contains('active'));
+      const newIdx =
+        e.key === 'ArrowLeft'
+          ? (activeIdx - 1 + buttons.length) % buttons.length
+          : (activeIdx + 1) % buttons.length;
+
       buttons.forEach((btn, i) => {
         if (i === newIdx) {
           btn.click();
@@ -98,7 +106,7 @@ function setupEventListeners() {
       });
     }
   });
-  
+
   document.querySelectorAll('.seg-btn[data-orientation]').forEach((btn) => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.seg-btn[data-orientation]').forEach((b) => {
@@ -125,9 +133,12 @@ function setupEventListeners() {
     if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
       e.preventDefault();
       const buttons = Array.from(qualityGroup.querySelectorAll('.seg-btn'));
-      const activeIdx = buttons.findIndex(btn => btn.classList.contains('active'));
-      let newIdx = e.key === 'ArrowLeft' ? (activeIdx - 1 + buttons.length) % buttons.length : (activeIdx + 1) % buttons.length;
-      
+      const activeIdx = buttons.findIndex((btn) => btn.classList.contains('active'));
+      const newIdx =
+        e.key === 'ArrowLeft'
+          ? (activeIdx - 1 + buttons.length) % buttons.length
+          : (activeIdx + 1) % buttons.length;
+
       buttons.forEach((btn, i) => {
         if (i === newIdx) {
           btn.click();
@@ -138,7 +149,7 @@ function setupEventListeners() {
       });
     }
   });
-  
+
   document.querySelectorAll('.seg-btn[data-quality]').forEach((btn) => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.seg-btn[data-quality]').forEach((b) => {
@@ -150,6 +161,62 @@ function setupEventListeners() {
       btn.setAttribute('aria-checked', 'true');
       btn.tabIndex = 0;
       currentQuality = btn.dataset.quality;
+    });
+  });
+
+  // Collapsible control groups (role=button + aria-expanded in markup)
+  document.querySelectorAll(COLLAPSIBLE_SELECTOR).forEach((title) => {
+    const toggle = () => {
+      const expanded = title.getAttribute('aria-expanded') === 'true';
+      title.setAttribute('aria-expanded', String(!expanded));
+      title
+        .closest('.control-group')
+        .querySelector('.control-group__body')
+        ?.classList.toggle('collapsed', expanded);
+    };
+    title.addEventListener('click', toggle);
+    title.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        toggle();
+      }
+    });
+  });
+
+  // Images-to-include mode (all vs selected only)
+  const imagesGroup = document.querySelector('[aria-label="Image selection"]');
+  imagesGroup?.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+      e.preventDefault();
+      const buttons = Array.from(imagesGroup.querySelectorAll('.seg-btn'));
+      const activeIdx = buttons.findIndex((btn) => btn.classList.contains('active'));
+      const newIdx =
+        e.key === 'ArrowLeft'
+          ? (activeIdx - 1 + buttons.length) % buttons.length
+          : (activeIdx + 1) % buttons.length;
+
+      buttons.forEach((btn, i) => {
+        if (i === newIdx) {
+          btn.click();
+          btn.focus();
+        } else {
+          btn.blur();
+        }
+      });
+    }
+  });
+
+  document.querySelectorAll('.seg-btn[data-images]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.seg-btn[data-images]').forEach((b) => {
+        b.classList.remove('active');
+        b.setAttribute('aria-checked', 'false');
+        b.tabIndex = -1;
+      });
+      btn.classList.add('active');
+      btn.setAttribute('aria-checked', 'true');
+      btn.tabIndex = 0;
+      currentImagesMode = btn.dataset.images;
     });
   });
 
@@ -252,7 +319,7 @@ function renderImages() {
 
 function createImageCard(image, index) {
   const card = document.createElement('div');
-  card.className = 'page-card';
+  card.className = 'page-card page-card--selected';
   card.draggable = true;
   card.dataset.id = image.id;
   card.setAttribute('role', 'listitem');
@@ -321,6 +388,8 @@ function handleDragStart(e) {
   draggedImageId = e.currentTarget.dataset.id;
   e.currentTarget.classList.add('page-card--dragging');
   e.dataTransfer.effectAllowed = 'move';
+  // Firefox requires setData to initiate the drag
+  e.dataTransfer.setData('text/plain', draggedImageId);
 }
 
 function handleDragEnd(e) {
@@ -395,10 +464,17 @@ function updateFilename() {
 }
 
 function updateConvertButton() {
-  const selectedCount = images.filter((img) =>
-    imagesGrid.querySelector(`[data-id="${img.id}"]`).classList.contains('page-card--selected'),
-  ).length;
+  const selectedCount = getSelectedImages().length;
   btnConvert.disabled = selectedCount === 0;
+}
+
+function getSelectedImages() {
+  if (currentImagesMode === 'all') {
+    return images;
+  }
+  return images.filter((img) =>
+    imagesGrid.querySelector(`[data-id="${img.id}"]`)?.classList.contains('page-card--selected'),
+  );
 }
 
 function updateControlsVisibility() {
@@ -413,10 +489,12 @@ function announce(message) {
 
 function resetAll() {
   // Cleanup any existing object URLs
-  createdUrls.forEach(url => URL.revokeObjectURL(url));
+  createdUrls.forEach((url) => {
+    URL.revokeObjectURL(url);
+  });
   createdUrls.clear();
-  window.currentPdfBlob = null;
-  
+  pdfBlob = null;
+
   images = [];
   imagesGrid.innerHTML = '';
   workspace.hidden = true;
@@ -430,10 +508,7 @@ function resetAll() {
 
 // === PDF Conversion ===
 async function convertToPdf() {
-  const selectedImages = images.filter((img) => {
-    const card = imagesGrid.querySelector(`[data-id="${img.id}"]`);
-    return card.classList.contains('page-card--selected');
-  });
+  const selectedImages = getSelectedImages();
 
   if (selectedImages.length === 0) return;
 
@@ -441,6 +516,7 @@ async function convertToPdf() {
   progressContainer.hidden = false;
   progressFill.style.width = '0%';
   progressPercent.textContent = '0%';
+  progressContainer.querySelector('[role="progressbar"]').setAttribute('aria-valuenow', '0');
   resultInfo.hidden = true;
   btnDownload.hidden = true;
 
@@ -457,6 +533,9 @@ async function convertToPdf() {
       const percent = Math.round(((i + 1) / selectedImages.length) * 100);
       progressFill.style.width = `${percent}%`;
       progressPercent.textContent = `${percent}%`;
+      progressContainer
+        .querySelector('[role="progressbar"]')
+        .setAttribute('aria-valuenow', String(percent));
 
       let jpgBytes, pngBytes;
 
@@ -475,7 +554,7 @@ async function convertToPdf() {
         const ctx = canvas.getContext('2d');
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
+
         const tempImg = new Image();
         await new Promise((r) => {
           tempImg.onload = r;
@@ -483,7 +562,7 @@ async function convertToPdf() {
           tempImg.src = image.thumbnail;
         });
         ctx.drawImage(tempImg, 0, 0);
-        
+
         const jpegDataUrl = await new Promise((resolve) => {
           canvas.toBlob(
             (blob) => {
@@ -549,12 +628,11 @@ async function convertToPdf() {
     const pdfBytes = await pdfDoc.save();
 
     // Store PDF for download - cleanup old blob first
-    if (window.currentPdfBlob) {
-      const oldUrl = window.currentPdfBlob._objectUrl;
-      if (oldUrl) URL.revokeObjectURL(oldUrl);
+    if (pdfBlob?._objectUrl) {
+      URL.revokeObjectURL(pdfBlob._objectUrl);
     }
-    
-    window.currentPdfBlob = new Blob([pdfBytes], { type: 'application/pdf' });
+
+    pdfBlob = new Blob([pdfBytes], { type: 'application/pdf' });
 
     progressFill.style.width = '100%';
     progressPercent.textContent = '100%';
@@ -575,26 +653,26 @@ async function convertToPdf() {
 }
 
 async function downloadPdf() {
-  if (!window.currentPdfBlob) return;
+  if (!pdfBlob) return;
 
-  const url = URL.createObjectURL(window.currentPdfBlob);
+  const url = URL.createObjectURL(pdfBlob);
   // Store URL for cleanup
-  window.currentPdfBlob._objectUrl = url;
+  pdfBlob._objectUrl = url;
   createdUrls.add(url);
-  
+
   const a = document.createElement('a');
   a.href = url;
   a.download = `images-${new Date().toISOString().slice(0, 10)}.pdf`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
-  
+
   // Schedule cleanup
   setTimeout(() => {
     URL.revokeObjectURL(url);
     createdUrls.delete(url);
   }, 5000);
-  
+
   announce(t('btn.download'));
 }
 

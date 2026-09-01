@@ -45,11 +45,9 @@ export async function uploadTestImage(page, filename = 'test-image.png') {
  */
 export async function waitForCardsRender(page, expectedCount = undefined, timeout = 10000) {
   // Wait for at least one card to be present
-  await page.waitForFunction(
-    () => document.querySelectorAll('.page-card').length > 0,
-    null,
-    { timeout }
-  );
+  await page.waitForFunction(() => document.querySelectorAll('.page-card').length > 0, null, {
+    timeout,
+  });
 
   if (expectedCount !== undefined) {
     // Wait for card count to stabilize
@@ -63,7 +61,7 @@ export async function waitForCardsRender(page, expectedCount = undefined, timeou
         });
       },
       expectedCount,
-      { timeout }
+      { timeout },
     );
   }
 }
@@ -111,7 +109,10 @@ export function getFixturePath(filename) {
  * @param {boolean} select - true to select, false to deselect
  */
 export async function toggleImageSelection(page, index, select = true) {
-  const checkbox = page.locator(`#images-grid .page-card`).nth(index).locator('.page-card__checkbox');
+  const checkbox = page
+    .locator(`#images-grid .page-card`)
+    .nth(index)
+    .locator('.page-card__checkbox');
   const isChecked = await checkbox.isChecked();
 
   if (isChecked !== select) {

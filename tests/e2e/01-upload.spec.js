@@ -7,15 +7,14 @@
  * - Format non supporté → rejet
  * - Bouton "Create PDF" activé après upload
  */
-import { test, expect } from '@playwright/test';
-import path from 'path';
+import { expect, test } from '@playwright/test';
 import fs from 'fs';
+import path from 'path';
 import { createTestImage } from './helpers/test-fixtures-gen.js';
 
 const fixturesDir = path.join(process.cwd(), 'tests/e2e/fixtures');
 
 test.describe('📤 Upload et Preview', () => {
-
   test.beforeAll(async () => {
     fs.mkdirSync(fixturesDir, { recursive: true });
     if (!fs.existsSync(path.join(fixturesDir, 'test-image-1.png'))) {

@@ -13,17 +13,17 @@ const crcTable = [];
 for (let n = 0; n < 256; n++) {
   let c = n;
   for (let k = 0; k < 8; k++) {
-    c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+    c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
   }
   crcTable[n] = c;
 }
 
 function crc32(buf) {
-  let crc = 0xFFFFFFFF;
+  let crc = 0xffffffff;
   for (let i = 0; i < buf.length; i++) {
-    crc = crcTable[(crc ^ buf[i]) & 0xFF] ^ (crc >>> 8);
+    crc = crcTable[(crc ^ buf[i]) & 0xff] ^ (crc >>> 8);
   }
-  return (crc ^ 0xFFFFFFFF) >>> 0;
+  return (crc ^ 0xffffffff) >>> 0;
 }
 
 function makeChunk(type, data) {
@@ -49,14 +49,14 @@ function createPngBuffer(width, height, options = {}) {
     textColor = [50, 50, 50],
   } = options;
 
-  const signature = Buffer.from([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]);
+  const signature = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 
   // IHDR
   const ihdr = Buffer.alloc(13);
   ihdr.writeUInt32BE(width, 0);
   ihdr.writeUInt32BE(height, 4);
-  ihdr[8] = 8;  // bit depth
-  ihdr[9] = 2;  // color type: RGB
+  ihdr[8] = 8; // bit depth
+  ihdr[9] = 2; // color type: RGB
   ihdr[10] = 0; // compression
   ihdr[11] = 0; // filter
   ihdr[12] = 0; // interlace
@@ -71,7 +71,9 @@ function createPngBuffer(width, height, options = {}) {
 
     for (let x = 0; x < width; x++) {
       const px = rowOff + 1 + x * 3;
-      let r = bgColor[0], g = bgColor[1], b = bgColor[2];
+      let r = bgColor[0],
+        g = bgColor[1],
+        b = bgColor[2];
 
       // Border
       if (hasBorder && (x < 10 || x >= width - 10 || y < 10 || y >= height - 10)) {
@@ -96,7 +98,7 @@ function createPngBuffer(width, height, options = {}) {
       // Simulated text lines
       const lineSpacing = Math.max(20, Math.floor(height / (textLines + 2)));
       for (let line = 0; line < textLines; line++) {
-        const lineY = y - (line * lineSpacing);
+        const lineY = y - line * lineSpacing;
         if (lineY >= 0 && lineY < 5 && x > width * 0.2 && x < width * 0.8) {
           r = textColor[0];
           g = textColor[1];
@@ -133,12 +135,12 @@ export function createTestImage(options = {}) {
 
   // Vary colors slightly for each variant
   const centerColors = [
-    [220, 50, 50],   // Red
-    [50, 220, 50],   // Green
-    [50, 50, 220],   // Blue
-    [220, 180, 50],  // Yellow
-    [180, 50, 220],  // Purple
-    [50, 180, 220],  // Cyan
+    [220, 50, 50], // Red
+    [50, 220, 50], // Green
+    [50, 50, 220], // Blue
+    [220, 180, 50], // Yellow
+    [180, 50, 220], // Purple
+    [50, 180, 220], // Cyan
   ];
 
   const colorIndex = variant % centerColors.length;

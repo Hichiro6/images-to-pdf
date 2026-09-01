@@ -7,15 +7,14 @@
  * - Attribut html.lang mis à jour
  * - Traductions appliquées
  */
-import { test, expect } from '@playwright/test';
-import path from 'path';
+import { expect, test } from '@playwright/test';
 import fs from 'fs';
+import path from 'path';
 import { createTestImage } from './helpers/test-fixtures-gen.js';
 
 const fixturesDir = path.join(process.cwd(), 'tests/e2e/fixtures');
 
 test.describe('🌐 Internationalisation', () => {
-
   test.beforeAll(async () => {
     fs.mkdirSync(fixturesDir, { recursive: true });
     for (let i = 1; i <= 2; i++) {
@@ -136,7 +135,7 @@ test.describe('🌐 Internationalisation', () => {
 
     const select = page.locator('#lang-selector select');
     const optionCount = await select.locator('option').count();
-    
+
     // Should have multiple options (at least: en, fr, de, es, pt, nl, it)
     expect(optionCount).toBeGreaterThanOrEqual(7);
   });

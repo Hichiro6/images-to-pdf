@@ -10,16 +10,15 @@
  * Note: Tests for page-card--selected class removed - app doesn't add it on card creation
  * even though checkbox.checked = true. See src/main.js:224 vs 227.
  */
-import { test, expect } from '@playwright/test';
-import path from 'path';
+import { expect, test } from '@playwright/test';
 import fs from 'fs';
+import path from 'path';
 import { createTestImage } from './helpers/test-fixtures-gen.js';
 import { uploadTestImage, waitForCardsRender } from './helpers/test-utils.js';
 
 const fixturesDir = path.join(process.cwd(), 'tests/e2e/fixtures');
 
 test.describe('🔄 Réorganisation et Sélection', () => {
-
   test.beforeAll(async () => {
     fs.mkdirSync(fixturesDir, { recursive: true });
     for (let i = 1; i <= 5; i++) {

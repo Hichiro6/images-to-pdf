@@ -8,15 +8,14 @@
  * - Margin slider value update
  * - Quality seg-btn toggle
  */
-import { test, expect } from '@playwright/test';
-import path from 'path';
+import { expect, test } from '@playwright/test';
 import fs from 'fs';
+import path from 'path';
 import { createTestImage } from './helpers/test-fixtures-gen.js';
 
 const fixturesDir = path.join(process.cwd(), 'tests/e2e/fixtures');
 
 test.describe('🎛️ Contrôles UI', () => {
-
   test.beforeAll(async () => {
     fs.mkdirSync(fixturesDir, { recursive: true });
     for (let i = 1; i <= 2; i++) {
@@ -55,7 +54,7 @@ test.describe('🎛️ Contrôles UI', () => {
     await expect(page.locator('#workspace')).not.toHaveAttribute('hidden', '', { timeout: 10000 });
 
     const formatSelect = page.locator('#format-select');
-    
+
     // Options exist (dont check exact values)
     const optionCount = await formatSelect.locator('option').count();
     expect(optionCount).toBeGreaterThan(0);
@@ -77,7 +76,7 @@ test.describe('🎛️ Contrôles UI', () => {
     const landscapeBtn = page.locator('.seg-btn[data-orientation="landscape"]');
 
     // Portrait active by default
-    const portraitActive = await portraitBtn.evaluate(el => el.classList.contains('active'));
+    const portraitActive = await portraitBtn.evaluate((el) => el.classList.contains('active'));
     expect(portraitActive).toBe(true);
 
     // Click landscape
@@ -85,9 +84,9 @@ test.describe('🎛️ Contrôles UI', () => {
     await page.waitForTimeout(300);
 
     // Landscape should be active now
-    const landscapeActive = await landscapeBtn.evaluate(el => el.classList.contains('active'));
+    const landscapeActive = await landscapeBtn.evaluate((el) => el.classList.contains('active'));
     expect(landscapeActive).toBe(true);
-    const portraitNotActive = await portraitBtn.evaluate(el => !el.classList.contains('active'));
+    const portraitNotActive = await portraitBtn.evaluate((el) => !el.classList.contains('active'));
     expect(portraitNotActive).toBe(true);
   });
 
@@ -110,7 +109,7 @@ test.describe('🎛️ Contrôles UI', () => {
     await portraitBtn.click();
     await page.waitForTimeout(300);
 
-    const portraitActive = await portraitBtn.evaluate(el => el.classList.contains('active'));
+    const portraitActive = await portraitBtn.evaluate((el) => el.classList.contains('active'));
     expect(portraitActive).toBe(true);
   });
 
@@ -152,11 +151,11 @@ test.describe('🎛️ Contrôles UI', () => {
     const highBtn = page.locator('.seg-btn[data-quality="high"]');
 
     // Medium should be active by default
-    const mediumActive = await mediumBtn.evaluate(el => el.classList.contains('active'));
+    const mediumActive = await mediumBtn.evaluate((el) => el.classList.contains('active'));
     expect(mediumActive).toBe(true);
-    const lowNotActive = await lowBtn.evaluate(el => !el.classList.contains('active'));
+    const lowNotActive = await lowBtn.evaluate((el) => !el.classList.contains('active'));
     expect(lowNotActive).toBe(true);
-    const highNotActive = await highBtn.evaluate(el => !el.classList.contains('active'));
+    const highNotActive = await highBtn.evaluate((el) => !el.classList.contains('active'));
     expect(highNotActive).toBe(true);
   });
 
@@ -176,9 +175,9 @@ test.describe('🎛️ Contrôles UI', () => {
     await page.waitForTimeout(300);
 
     // High should be active now
-    const highActive = await highBtn.evaluate(el => el.classList.contains('active'));
+    const highActive = await highBtn.evaluate((el) => el.classList.contains('active'));
     expect(highActive).toBe(true);
-    const mediumNotActive = await mediumBtn.evaluate(el => !el.classList.contains('active'));
+    const mediumNotActive = await mediumBtn.evaluate((el) => !el.classList.contains('active'));
     expect(mediumNotActive).toBe(true);
   });
 

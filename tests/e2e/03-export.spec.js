@@ -9,16 +9,15 @@
  *
  * SKIP: Tests de conversion PDF complète (trop lourds en headless)
  */
-import { test, expect } from '@playwright/test';
-import path from 'path';
+import { expect, test } from '@playwright/test';
 import fs from 'fs';
+import path from 'path';
 import { createTestImage } from './helpers/test-fixtures-gen.js';
 import { waitForCardsRender } from './helpers/test-utils.js';
 
 const fixturesDir = path.join(process.cwd(), 'tests/e2e/fixtures');
 
 test.describe('📄 Export PDF (simplified)', () => {
-
   test.beforeAll(async () => {
     fs.mkdirSync(fixturesDir, { recursive: true });
     for (let i = 1; i <= 3; i++) {
@@ -119,9 +118,7 @@ test.describe('📄 Export PDF (simplified)', () => {
     const landscapeBtn = page.locator('.seg-btn[data-orientation="landscape"]');
 
     // Portrait should be active by default
-    const portraitHasActive = await portraitBtn.evaluate(el =>
-      el.classList.contains('active')
-    );
+    const portraitHasActive = await portraitBtn.evaluate((el) => el.classList.contains('active'));
     expect(portraitHasActive).toBe(true);
 
     // Click landscape
@@ -129,9 +126,7 @@ test.describe('📄 Export PDF (simplified)', () => {
     await page.waitForTimeout(200);
 
     // Landscape should be active now
-    const landscapeHasActive = await landscapeBtn.evaluate(el =>
-      el.classList.contains('active')
-    );
+    const landscapeHasActive = await landscapeBtn.evaluate((el) => el.classList.contains('active'));
     expect(landscapeHasActive).toBe(true);
   });
 

@@ -8,15 +8,14 @@
  *
  * SKIP: Axe-core deep audit (too heavy for simplified tests)
  */
-import { test, expect } from '@playwright/test';
-import path from 'path';
+import { expect, test } from '@playwright/test';
 import fs from 'fs';
+import path from 'path';
 import { createTestImage } from './helpers/test-fixtures-gen.js';
 
 const fixturesDir = path.join(process.cwd(), 'tests/e2e/fixtures');
 
 test.describe('♿ Accessibilité', () => {
-
   test.beforeAll(async () => {
     fs.mkdirSync(fixturesDir, { recursive: true });
     for (let i = 1; i <= 2; i++) {
@@ -33,7 +32,7 @@ test.describe('♿ Accessibilité', () => {
     // sr-live region should exist
     const srLive = page.locator('#sr-live');
     await expect(srLive).toBeAttached();
-    
+
     // Should have role=status and aria-live=polite
     await expect(srLive).toHaveAttribute('role', 'status');
     await expect(srLive).toHaveAttribute('aria-live', 'polite');
@@ -43,10 +42,10 @@ test.describe('♿ Accessibilité', () => {
     await page.goto('/');
 
     const dropzone = page.locator('#dropzone');
-    
+
     // Should have tabindex
     await expect(dropzone).toHaveAttribute('tabindex');
-    
+
     // Should have role or aria-label
     await expect(dropzone).toHaveAttribute('aria-label');
   });
@@ -60,7 +59,7 @@ test.describe('♿ Accessibilité', () => {
     await expect(page.locator('#workspace')).not.toHaveAttribute('hidden', '', { timeout: 10000 });
 
     const grid = page.locator('#images-grid');
-    
+
     // Should have role=list
     await expect(grid).toHaveAttribute('role', 'list');
     // Should have aria-label
@@ -90,7 +89,7 @@ test.describe('♿ Accessibilité', () => {
     await page.waitForSelector('#dropzone', { timeout: 10000 });
 
     const btnConvert = page.locator('#btn-convert');
-    
+
     // Should have aria-label
     await expect(btnConvert).toHaveAttribute('aria-label');
   });
@@ -105,7 +104,7 @@ test.describe('♿ Accessibilité', () => {
 
     // Format select
     await expect(page.locator('#format-select')).toHaveAttribute('aria-label');
-    
+
     // Margin range
     await expect(page.locator('#margin-range')).toHaveAttribute('aria-label');
   });
@@ -119,7 +118,7 @@ test.describe('♿ Accessibilité', () => {
     await expect(page.locator('#workspace')).not.toHaveAttribute('hidden', '', { timeout: 10000 });
 
     const portraitBtn = page.locator('.seg-btn[data-orientation="portrait"]');
-    
+
     // Should have role=radio and aria-checked
     await expect(portraitBtn).toHaveAttribute('role', 'radio');
     await expect(portraitBtn).toHaveAttribute('aria-checked');
@@ -135,10 +134,10 @@ test.describe('♿ Accessibilité', () => {
 
     const progressBar = page.locator('#progress-bar');
     const progressContainer = page.locator('#progress-container');
-    
+
     // Progress container is hidden by default
     await expect(progressContainer).toHaveAttribute('hidden', '');
-    
+
     // Progress bar should have progressbar attributes
     await expect(progressBar).toHaveAttribute('role', 'progressbar');
     await expect(progressBar).toHaveAttribute('aria-valuemin', '0');
@@ -155,7 +154,7 @@ test.describe('♿ Accessibilité', () => {
 
     // Add more button
     await expect(page.locator('#btn-add-more')).toHaveAttribute('aria-label');
-    
+
     // Reset button
     await expect(page.locator('#btn-reset')).toHaveAttribute('aria-label');
   });
@@ -172,7 +171,7 @@ test.describe('♿ Accessibilité', () => {
     await expect(page.locator('#workspace')).not.toHaveAttribute('hidden', '', { timeout: 10000 });
 
     const checkbox = page.locator('#images-grid .page-card__checkbox').first();
-    
+
     // Checkbox should have aria-label
     await expect(checkbox).toHaveAttribute('aria-label');
   });
@@ -182,7 +181,7 @@ test.describe('♿ Accessibilité', () => {
     await page.waitForSelector('#lang-selector', { timeout: 10000 });
 
     const select = page.locator('#lang-selector select');
-    
+
     // Should have aria-label
     await expect(select).toHaveAttribute('aria-label');
   });
@@ -197,7 +196,7 @@ test.describe('♿ Accessibilité', () => {
 
     // Orientation radiogroup
     const orientationGroup = page.locator('.seg-control[role="radiogroup"]').first();
-    
+
     // Should have role=radiogroup
     await expect(orientationGroup).toHaveAttribute('role', 'radiogroup');
     // Should have aria-label
